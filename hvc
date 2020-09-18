@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+""" Encode video file(s) recursively to HEVC 10Bit video. """
+
+from glob import glob
+
+__author__     = "Madhusudhan D Desai"
+__copyright__  = "Copyright 2020, mddnix"
+__license__    = "GPL"
+__version__    = "1.0"
+__maintainer__ = "Madhusudhan D Desai"
+__email__      = "mddnix@gmail.com"
+__status__     = "Production"
+
+# Valid extensions
+EXTN = ('*.avi', '*.flv', '*.mkv', '*.mov', '*.mp4', 
+        '*.mpeg', '*.mpg', '*.webm', '*.wmv')
+
+# Get all video files recursively in a directory and store it in a list
+def get_videos():
+
+    video_files = []
+
+    # Add file with extension listed in EXTN tuple to 'video_files' list.
+    for file in EXTN:
+        video_files.extend(glob("**/*" + file, recursive = True))
+
+    # Sort list
+    video_files.sort()
+    
+    return video_files
+
+if __name__ == '__main__':
+
+    #print(video_files)
+    files = get_videos()
+    print("The Videos are:")
+    for i in files:
+        print(i)
