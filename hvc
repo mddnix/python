@@ -38,18 +38,24 @@ def get_files(path):
     # return sorted list
     return sorted(video_files)
 
-help_msg = 'Encode video file(s) recursively to HEVC 10Bit.'
-parser = argparse.ArgumentParser(description=help_msg)
-group = parser.add_mutually_exclusive_group()
-parser.add_argument('path', nargs='?', default=PWD, type=str, help='Path to a folder. Default is current directory.')
-group.add_argument('-a', '--all', action='store_true', help='List all video files.')
-group.add_argument('-H', '--hevc', action='store_true', help='List all HEVC video files.')
-group.add_argument('-o', '--other', action='store_true', help='List all video files other than HEVC.')
-group.add_argument('-e', '--encode', action='store_true', help='Encode video(s) recursively to HEVC 10bit.')
-args = parser.parse_args()
+def main():
+    help_msg = 'Encode video file(s) recursively to HEVC 10Bit.'
+    parser = argparse.ArgumentParser(description=help_msg)
+    group = parser.add_mutually_exclusive_group()
+    parser.add_argument('path', nargs='?', default=PWD, metavar='PATH', type=str, help='Path to a folder. Default is current folder.')
+    group.add_argument('-a', '--all', action='store_true', help='List all videos.')
+    group.add_argument('-H', '--hevc', action='store_true', help='List HEVC videos only.')
+    group.add_argument('-o', '--other', action='store_true', help='List other videos. Exclude HEVC videos.')
+    group.add_argument('-e', '--encode', action='store_true', help='Encode video(s) recursively to HEVC 10bit.')
+    args = parser.parse_args()
+    
+    if args.all:
+        files = get_files(args.path)
+        for i in files:
+            print(i)
+    else:
+        print("Nooooo argument")
+    
 
-if args.all:
-    files = get_files(args.path)
-
-for i in files:
-    print(i)
+if __name__ == '__main__':
+    main()
