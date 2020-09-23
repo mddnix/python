@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+""" Encode video file(s) recursively to HEVC 10Bit video. """
+
+import os
+import argparse
+
+__author__     = "Madhusudhan D Desai"
+__copyright__  = "Copyright 2020, mddnix"
+__license__    = "GPL"
+__version__    = "1.0"
+__maintainer__ = "Madhusudhan D Desai"
+__email__      = "mddnix@gmail.com"
+__status__     = "Production"
+
+# Valid extensions
+EXTN = ('.avi', '.flv', '.mkv', '.mov', '.mp4', 
+        '.mpeg', '.mpg', '.webm', '.wmv')
+
+PWD = os.getcwd()
+
+
+# Get video files in a directory and store them in a list.
+# @param Path where the script should run.
+# @return List of all video files.
+def get_videos(path, recursive):
+
+    videos = []
+
+    if recursive:
+        for root, dirs, files in os.walk(path):
+            for filename in files:
+                for ext in EXTN:
+                    if filename.lower().endswith(ext.lower()):
+                        videos.append(os.path.join(root, filename))
+    else:
+        for root, dirs, files in os.walk(path):
+            for filename in files:
+                for ext in EXTN:
+                    if filename.lower().endswith(ext.lower()):
+                        videos.append(os.path.join(root, filename))
+            break
+    
+    return sorted(videos)
+
+def parse_options():
+    help_msg = 'Encode videos to HEVC 10Bit'
+    parser = argparse.ArgumentParser(description=help_msg)
+    group = parser.add_mutually_exclusive_group(required=True)
+
+    group.add_argument(
+            '-a',
+            dest='all_vids',
+            nargs='?',
+            action='store',
+            const=PWD,
+            metavar='PATH',
+            help='List all videos'
+            )
+    group.add_argument(
+            '-H',
+            dest='hvc_vids',
+            nargs='?',
+            action='store',
+            const=PWD,
+            metavar='PATH',
+            help='List HEVC videos only'
+            )
+    group.add_argument(
+            '-o',
+            dest='oth_vids',
+            nargs='?',
+            action='store',
+            const=PWD,
+            metavar='PATH',
+            help='List other videos. Exclude all HEVC videos'
+            )
+    group.add_argument(
+            '-e',
+            dest='enc_vids',
+            nargs='?',
+            action='store',
+            const=PWD,
+            metavar='PATH',
+            help='Encode videos to HEVC 10bit'
+            )
+    parser.add_argument(
+            '-r',
+            dest='rcr_vids',
+            action='store_true',
+            help='Set recursive option ON'
+            )
+
+    return parser.parse_args()
+
+
+
+def main():
+	args = parse_options()
+	if args.all_vids:
+		files = get_videos(args.all_vids, args.rcr_vids)
+		for i in files:
+			print(i)
+	else:
+		print("No option specified")
+
+	
+
+
+if __name__ == '__main__':
+    main()
