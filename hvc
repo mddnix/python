@@ -36,7 +36,8 @@ def get_files(path):
                     video_files.append(os.path.join(dirpath, file))
 
     # return sorted list
-    return sorted(video_files)
+    #return sorted(video_files)
+    return video_files
 
 def parse_options():
     help_msg = 'Encode video file(s) recursively to HEVC 10Bit'
@@ -84,11 +85,11 @@ def main():
     args = parse_options() 
     if args.all:
         files = get_files(args.path)
+        for i in files:
+            print(i)
     else:
-        files = get_files(args.path)
+        print("No option specified")
     
-    for i in files:
-        print(i)
     
 
 if __name__ == '__main__':
