@@ -3,6 +3,7 @@
 
 import os
 import argparse
+from pymediainfo import MediaInfo as mi
 
 __author__     = "Madhusudhan D Desai"
 __copyright__  = "Copyright 2020, mddnix"
@@ -19,12 +20,14 @@ EXTN = ('.avi', '.flv', '.mkv', '.mov', '.mp4',
 PWD = os.getcwd()
 
 
-# Get video files in a directory and store them in a list.
-# @param Path where the script should run.
+# Find all video files in a directory and store them in a list.
+# @param: Path where the script should run.
+# @param: Recursive or not. 
 # @return List of all video files.
-def get_videos(path, recursive):
+def get_videos(path, recursive, flag):
 
     videos = []
+    videos_mi = []
 
     if recursive:
         for root, dirs, files in os.walk(path):
@@ -39,8 +42,28 @@ def get_videos(path, recursive):
                     if filename.lower().endswith(ext.lower()):
                         videos.append(os.path.join(root, filename))
             break
-    
-    return sorted(videos)
+    videos_mi = get_media_info(sorted(videos), flag) 
+    return videos_mi
+
+def get_media_info(video_list, flag):
+    track_video = {}
+    track_general = {}
+    videos_mi = []
+    for video in video_list:
+        media_info = mi.parse(video)
+        for track in media_info.tracks:
+            if track.track_type == 'Video':
+                track_video = {"fname": video, "format": track.format, "width": track.width, "height": track.height, "duration": (float(track.duration) / 1000), "framerate": float(track.frame_rate)}
+            elif track.track_type == 'General':
+                track_general = {"fsize_byte": int(track.file_size), "fsize_human": track.other_file_size[0]}
+        track_video.update(track_general)
+        videos_mi.append(track_video)
+
+    return videos_mi
+
+
+
+
 
 def parse_options():
     help_msg = 'Encode videos to HEVC 10Bit'
@@ -95,16 +118,20 @@ def parse_options():
 
 
 def main():
-	args = parse_options()
-	if args.all_vids:
-		files = get_videos(args.all_vids, args.rcr_vids)
-		for i in files:
-			print(i)
-	else:
-		print("No option specified")
+    args = parse_options()
+    if args.all_vids:
+        flag = 'ALL'
+        files = get_videos(args.all_vids, args.rcr_vids, flag)
+        for i in files:
+            print(i)
 
 	
 
 
 if __name__ == '__main__':
     main()
+
+
+
+### Some other statements which can be used later
+#print(track.to_data().keys())
