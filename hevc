@@ -42,24 +42,48 @@ def get_videos(path, recursive, flag):
                     if filename.lower().endswith(ext.lower()):
                         videos.append(os.path.join(root, filename))
             break
-    videos_mi = get_media_info(sorted(videos), flag) 
+    videos.sort()
+    videos_mi = get_media_info(videos, flag) 
     return videos_mi
 
 def get_media_info(video_list, flag):
     track_video = {}
     track_general = {}
-    videos_mi = []
+    videos_temp = []
+    videos_mi_list = []
     for video in video_list:
         media_info = mi.parse(video)
         for track in media_info.tracks:
             if track.track_type == 'Video':
-                track_video = {"fname": video, "format": track.format, "width": track.width, "height": track.height, "duration": (float(track.duration) / 1000), "framerate": float(track.frame_rate)}
+                track_video = {
+                        "fname": video, 
+                        "format": track.format, 
+                        "width": track.width, 
+                        "height": track.height, 
+                        "duration": (float(track.duration) / 1000), 
+                        "framerate": float(track.frame_rate)
+                        }
             elif track.track_type == 'General':
-                track_general = {"fsize_byte": int(track.file_size), "fsize_human": track.other_file_size[0]}
+                track_general = {
+                        "fsize_byte": int(track.file_size), 
+                        "fsize_human": track.other_file_size[0]
+                        }
         track_video.update(track_general)
-        videos_mi.append(track_video)
+        videos_temp.append(track_video)
 
-    return videos_mi
+    if flag == 'HEVC':
+        for record in videos_temp:
+            if record.get('format') == 'HEVC':
+                videos_mi_list.append(record)
+    elif flag == 'OTHER':
+        for record in videos_temp:
+            if record.get('format') != 'HEVC':
+                videos_mi_list.append(record)
+    else:
+        for record in videos_temp:
+            videos_mi_list.append(record)
+
+    return videos_mi_list
 
 
 
@@ -122,6 +146,16 @@ def main():
     if args.all_vids:
         flag = 'ALL'
         files = get_videos(args.all_vids, args.rcr_vids, flag)
+        for i in files:
+            print(i)
+    elif args.hvc_vids:
+        flag = 'HEVC'
+        files = get_videos(args.hvc_vids, args.rcr_vids, flag)
+        for i in files:
+            print(i)
+    elif args.oth_vids:
+        flag = 'OTHER'
+        files = get_videos(args.oth_vids, args.rcr_vids, flag)
         for i in files:
             print(i)
 
