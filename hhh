@@ -1,0 +1,10 @@
+#!/usr/bin/env python3                                                           
+""" Encode video file(s) recursively to HEVC 10Bit video. """                    
+                                                                                 
+import os                                                                        
+import argparse                                                                  
+from pymediainfo import MediaInfo as mi                                          
+                                                                                 
+# Valid extensions                                                               
+EXTN = ('.avi', '.flv', '.mkv', '.mov', '.mp4',                                  
+        '.mpeg', '.mpg', '.webm', '.wmv')                         
