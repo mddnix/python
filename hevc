@@ -60,6 +60,26 @@ def get_video_info(path, recur, flag):
         videos_list_mi = [rec for rec in videos_list_mi if rec.get('format') != 'HEVC']
         return videos_list_mi
 
+
+def print_videos(video_list):
+    count = len(video_list)
+    slno = 1
+
+    for vid in video_list:
+        codec = vid['format'][:4]
+        aspect = str(vid['width'])+'x'+str(vid['height'])
+        dur_h = vid['duration_h']
+        size_h = vid['fsize_human']
+        filename = vid['fname'].replace(PWD, '.', 1)
+
+
+
+        print(f"{slno:0>3d} {codec:4s} {aspect:9s} {dur_h:12s} {size_h:>10s} {filename}")
+        slno += 1
+
+#    for i in video_list:
+#        print(i)
+#
 def parse_options():
     help_msg = 'Encode videos to HEVC 10Bit'
     parser = argparse.ArgumentParser(description=help_msg)
@@ -114,17 +134,16 @@ def main():
     args = parse_options()
     video_files = []
     if args.all_vids:
-        flag = 'ALL'
-        video_files = get_video_info(args.all_vids, args.rcr_vids, flag)
+        video_files = get_video_info(args.all_vids, args.rcr_vids, 'ALL')
+        print_videos(video_files)
     if args.hvc_vids:
-        flag = 'HEVC'
-        video_files = get_video_info(args.hvc_vids, args.rcr_vids, flag)
+        video_files = get_video_info(args.hvc_vids, args.rcr_vids, 'HEVC')
+        print_videos(video_files)
     if args.oth_vids:
-        flag = 'OTHER'
-        video_files = get_video_info(args.oth_vids, args.rcr_vids, flag)
-
-    for i in video_files:
-        print(i)
+        video_files = get_video_info(args.oth_vids, args.rcr_vids, 'OTHER')
+        print_videos(video_files)
+    if args.enc_vids:
+        video_files = get_video_info(args.enc_vids, args.rcr_vids, 'OTHER')
 
 
 if __name__ == '__main__':
