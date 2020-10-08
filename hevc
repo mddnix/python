@@ -7,20 +7,51 @@ from pymediainfo import MediaInfo as mi
 
 # Valid extensions
 EXTN = ['.avi', '.flv', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.webm', '.wmv']
-PWD = os.getcwd()
+PWD = os.getcwd() # Get Present Working Directory
 
-def get_videos(path, recur, flag):
-    videos = []
+def get_video_info(path, recur, flag):
+    videos_list = [] # List of video file with extensions as in EXTN
+    videos_list_mi = [] # List of dictionary with MediaInfo from videos_list list
+    tmp_dict1 = {} # Temporary dict to hold MI Video info
+    tmp_dict2 = {} # Temporary dict to hold MI General info
+
+    # Get video files within a directory
     for root, dirs, files in os.walk(path):
         for filename in files:
             for ext in EXTN:
                 if filename.lower().endswith(ext.lower()):
-                    videos.append(os.path.join(root, filename))
+                    videos_list.append(os.path.join(root, filename))
         if not recur:
             break
 
-    videos.sort()
-    return videos
+    # Sort list by name
+    videos_list.sort()
+
+    # For every video in list 'videos_list' get mediainfo in dictionary format
+    for video in videos_list:
+        mediainfo = mi.parse(video)
+        for track in mediainfo.tracks:
+            if track.track_type == 'Video':
+                tmp_dict1 = {
+                        "fname": video,
+                        "format": track.format,
+                        "width": track.width,
+                        "height": track.height,
+                        "duration": (float(track.duration) / 1000),
+                        "framerate": float(track.frame_rate)
+                        }
+            elif track.track_type == 'General':
+                tmp_dict2 = {
+                        "fsize_byte": int(track.file_size),
+                        "fsize_human": track.other_file_size[0]
+                        }
+        tmp_dict1.update(tmp_dict2)
+        videos_list_mi.append(tmp_dict1)
+
+    return videos_list_mi
+
+
+    #return videos_list
 
 
 def parse_options():
@@ -41,7 +72,7 @@ def main():
     video_files = []
     if args.all_vids:
         flag = 'ALL'
-        video_files = get_videos(args.all_vids, args.rcr_vids, flag)
+        video_files = get_video_info(args.all_vids, args.rcr_vids, flag)
 
     for i in video_files:
         print(i)
