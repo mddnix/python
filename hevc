@@ -51,23 +51,62 @@ def get_video_info(path, recur, flag):
 
 
     # According to flags remove dictionat records from list videos_list
-
-
-    return videos_list_mi
-
-
-
+    if flag == 'ALL':
+        return videos_list_mi
+    elif flag == 'HEVC':
+        videos_list_mi = [rec for rec in videos_list_mi if rec.get('format') == 'HEVC']
+        return videos_list_mi
+    if flag == 'OTHER':
+        videos_list_mi = [rec for rec in videos_list_mi if rec.get('format') != 'HEVC']
+        return videos_list_mi
 
 def parse_options():
     help_msg = 'Encode videos to HEVC 10Bit'
     parser = argparse.ArgumentParser(description=help_msg)
     group = parser.add_mutually_exclusive_group(required=True)
 
-    group.add_argument('-a', dest='all_vids', nargs='?', action='store', const=PWD, metavar='PATH', help='List all videos')
-    group.add_argument('-H', dest='hvc_vids', nargs='?', action='store', const=PWD, metavar='PATH', help='List HEVC videos only')
-    group.add_argument('-o', dest='oth_vids', nargs='?', action='store', const=PWD, metavar='PATH', help='List other videos. Exclude all HEVC videos')
-    group.add_argument('-e', dest='enc_vids', nargs='?', action='store', const=PWD, metavar='PATH', help='Encode videos to HEVC 10bit')
-    parser.add_argument('-r', dest='rcr_vids', action='store_true', help='Set recursive option ON')
+    group.add_argument(
+            '-a', 
+            dest='all_vids', 
+            nargs='?', 
+            action='store', 
+            const=PWD, 
+            metavar='PATH', 
+            help='List all videos'
+            )
+    group.add_argument(
+            '-H', 
+            dest='hvc_vids', 
+            nargs='?', 
+            action='store', 
+            const=PWD, 
+            metavar='PATH', 
+            help='List HEVC videos only'
+            )
+    group.add_argument(
+            '-o', 
+            dest='oth_vids', 
+            nargs='?', 
+            action='store', 
+            const=PWD, 
+            metavar='PATH', 
+            help='List other videos. Exclude all HEVC videos'
+            )
+    group.add_argument(
+            '-e', 
+            dest='enc_vids', 
+            nargs='?', 
+            action='store', 
+            const=PWD, 
+            metavar='PATH', 
+            help='Encode videos to HEVC 10bit'
+            )
+    parser.add_argument(
+            '-r', 
+            dest='rcr_vids', 
+            action='store_true', 
+            help='Set recursive option ON'
+            )
 
     return parser.parse_args()
 
@@ -77,6 +116,12 @@ def main():
     if args.all_vids:
         flag = 'ALL'
         video_files = get_video_info(args.all_vids, args.rcr_vids, flag)
+    if args.hvc_vids:
+        flag = 'HEVC'
+        video_files = get_video_info(args.hvc_vids, args.rcr_vids, flag)
+    if args.oth_vids:
+        flag = 'OTHER'
+        video_files = get_video_info(args.oth_vids, args.rcr_vids, flag)
 
     for i in video_files:
         print(i)
