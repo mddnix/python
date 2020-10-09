@@ -74,8 +74,8 @@ def print_videos(video_list):
         print(f"{slno:0>3d} {codec:4s} {aspect:9s} {dur_h:12s} {size_h:>10s} {filename}")
         slno += 1
 
-#    for i in video_list:
-#        print(i)
+    for i in video_list:
+        print(i)
 #
 def parse_options():
     help_msg = 'Encode videos to HEVC 10Bit'
