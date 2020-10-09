@@ -17,16 +17,13 @@ def get_video_info(path, recur, flag):
 
     # Get video files within a directory
     for root, dirs, files in os.walk(path):
-        for filename in files:
+        for filename in sorted(files):
             for ext in EXTN:
                 if filename.lower().endswith(ext.lower()):
                     videos_list.append(os.path.join(root, filename))
         if not recur:
             break
-
-    # Sort list by name
-    videos_list.sort()
-
+        
     # For every video in list 'videos_list' get mediainfo in dictionary format
     for video in videos_list:
         mediainfo = mi.parse(video)
