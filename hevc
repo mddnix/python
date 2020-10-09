@@ -4,16 +4,19 @@
 import os
 import argparse
 from pymediainfo import MediaInfo as mi
+from termcolor import colored
+import datetime
+import humanfriendly as hf
 
 # Valid extensions
 EXTN = ['.avi', '.flv', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.webm', '.wmv']
 PWD = os.getcwd() # Get Present Working Directory
 
-def get_video_info(path, recur, flag):
+## Function to get a list of videos from a path
+#  returns a list
+def get_videos(path, recur):
+
     videos_list = [] # List of video file with extensions as in EXTN
-    videos_list_mi = [] # List of dictionary with MediaInfo from videos_list list
-    tmp_dict1 = {} # Temporary dict to hold MI Video info
-    tmp_dict2 = {} # Temporary dict to hold MI General info
 
     # Get video files within a directory
     for root, dirs, files in os.walk(path):
@@ -23,7 +26,17 @@ def get_video_info(path, recur, flag):
                     videos_list.append(os.path.join(root, filename))
         if not recur:
             break
+
+    return videos_list
         
+## Function to get a list of dictionary records of videos with MediaInfo
+#  returns a list with dictionary records
+def get_videos_mi_full(videos_list, flag):
+
+    videos_list_mi_full = [] # List of dictionary with MediaInfo
+    tmp_dict1 = {} # Temporary dict to hold MI Video info
+    tmp_dict2 = {} # Temporary dict to hold MI General info
+
     # For every video in list 'videos_list' get mediainfo in dictionary format
     for video in videos_list:
         mediainfo = mi.parse(video)
@@ -34,7 +47,8 @@ def get_video_info(path, recur, flag):
                         "format": track.format,
                         "width": track.width,
                         "height": track.height,
-                        "duration": (float(track.duration) / 1000),
+                        #"duration": (float(track.duration) / 1000),
+                        "duration": float(track.duration),
                         "duration_h": track.other_duration[3],
                         "framerate": float(track.frame_rate)
                         }
@@ -44,39 +58,46 @@ def get_video_info(path, recur, flag):
                         "fsize_human": track.other_file_size[0]
                         }
         tmp_dict1.update(tmp_dict2) # Join tmp_dict1 + tmp_dict2
-        videos_list_mi.append(tmp_dict1) # Append dictionary into the list
+        videos_list_mi_full.append(tmp_dict1) # Append dictionary into the list
 
 
-    # According to flags remove dictionat records from list videos_list
+    # According to flags remove dictionary records from list videos_list
     if flag == 'ALL':
-        return videos_list_mi
+        return videos_list_mi_full
     elif flag == 'HEVC':
-        videos_list_mi = [rec for rec in videos_list_mi if rec.get('format') == 'HEVC']
-        return videos_list_mi
+        videos_list_mi_full = [rec for rec in videos_list_mi_full if rec.get('format') == 'HEVC']
+        return videos_list_mi_full
     if flag == 'OTHER':
-        videos_list_mi = [rec for rec in videos_list_mi if rec.get('format') != 'HEVC']
-        return videos_list_mi
+        videos_list_mi_full = [rec for rec in videos_list_mi_full if rec.get('format') != 'HEVC']
+        return videos_list_mi_full
 
-
+## Print al videos in list mode
 def print_videos(video_list):
     count = len(video_list)
     slno = 1
+    dur_s = 0.0
+    size_b = 0
 
+    # Print header
+    print(colored('SL# CODE DIMENSION   DURATION       SIZE   FILENAME', 'yellow', attrs=['bold']))
+    # Loop through list and print content
     for vid in video_list:
         codec = vid['format'][:4]
         aspect = str(vid['width'])+'x'+str(vid['height'])
+        dur_s += vid['duration']
         dur_h = vid['duration_h']
+        size_b += vid['fsize_byte']
         size_h = vid['fsize_human']
         filename = vid['fname'].replace(PWD, '.', 1)
-
-
 
         print(f"{slno:0>3d} {codec:4s} {aspect:9s} {dur_h:12s} {size_h:>10s} {filename}")
         slno += 1
 
-    for i in video_list:
-        print(i)
-#
+    dur_in_time = str(datetime.timedelta(milliseconds = dur_s))[:-3]
+    size_in_human = hf.format_size(size_b, binary=True)
+    print(colored("                   ------------ ----------", 'cyan', attrs=['bold']))
+    print(colored(f'{" ":18s} {dur_in_time:>12s} {size_in_human:>10s}', 'yellow', attrs=['bold']))
+
 def parse_options():
     help_msg = 'Encode videos to HEVC 10Bit'
     parser = argparse.ArgumentParser(description=help_msg)
@@ -131,16 +152,19 @@ def main():
     args = parse_options()
     video_files = []
     if args.all_vids:
-        video_files = get_video_info(args.all_vids, args.rcr_vids, 'ALL')
-        print_videos(video_files)
+        files = get_videos(args.all_vids, args.rcr_vids)
+        files_mi_full = get_videos_mi_full(files, 'ALL')
+        print_videos(files_mi_full)
     if args.hvc_vids:
-        video_files = get_video_info(args.hvc_vids, args.rcr_vids, 'HEVC')
-        print_videos(video_files)
+        files = get_videos(args.hvc_vids, args.rcr_vids)
+        files_mi_full = get_videos_mi_full(files, 'HEVC')
+        print_videos(files_mi_full)
     if args.oth_vids:
-        video_files = get_video_info(args.oth_vids, args.rcr_vids, 'OTHER')
-        print_videos(video_files)
+        files = get_videos(args.oth_vids, args.rcr_vids)
+        files_mi_full = get_videos_mi_full(files, 'OTHER')
+        print_videos(files_mi_full)
     if args.enc_vids:
-        video_files = get_video_info(args.enc_vids, args.rcr_vids, 'OTHER')
+        print("To be continued...")
 
 
 if __name__ == '__main__':
