@@ -7,6 +7,7 @@ from pymediainfo import MediaInfo as mi
 from termcolor import colored
 import datetime
 import humanfriendly as hf
+import random
 
 # Valid extensions
 EXTN = ['.avi', '.flv', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.webm', '.wmv']
@@ -50,7 +51,8 @@ def get_videos_mi_full(videos_list, flag):
                         "height": track.height,
                         "duration": float(track.duration),
                         "duration_h": track.other_duration[3],
-                        "framerate": float(track.frame_rate)
+                        "framerate": float(track.frame_rate),
+                        "frame_count": track.frame_count
                         }
             elif track.track_type == 'General':
                 tmp_dict2 = {
@@ -150,6 +152,33 @@ def print_videos(video_list):
 attrs=['bold']))
     print(colored(f'{" ":18s} {dur_in_time:>12s} {size_in_human:>10s}', \
 'yellow', attrs=['bold']))
+
+
+## Encode videos to HEVC
+def encode_videos(video_list):
+    
+    count = len(video_list) # Total no of videos
+    cntr = 0 # Counter for each file
+
+    for vid in video_list:
+        filename = vid['fname']
+        frames = vid['frame_count']
+        size_k = int(vid['fsize_byte']/1024)
+        size_h = vid['fsize_human']
+        dura_h = vid['duration_h']
+        aspect = str(vid['width'])+'x'+str(vid['height'])
+        codec = vid['format']
+        cntr += 1
+        color_cntr = colored("Encoding  :", 'yellow', attrs=['bold']) + " " + colored(f'{cntr}/{count}', 'cyan', attrs=['bold'])
+        color_file = colored("Processing:", 'yellow', attrs=['bold']) + " " + colored(filename, 'cyan', attrs=['bold'])
+        rnd_name = "/tmp/hevc" + str(random.randrange(1, 10**10)) + ".mp4"
+        cmd = "ffmpeg -v error -hide_banner -stats -i " + filename + " -c:v libx265 -crf:v 28 -preset superfast -pix_fmt yuv444p10le -x265-params log-level=error -c:a aac -threads 0 -f mp4 " + rnd_name
+
+        print(color_cntr)
+        print(color_file)
+        print(colored(f"FRAMES={frames}, SIZE={size_h}, SIZE={size_k} KiB, TIME={dura_h}, ASPECT={aspect}, CODEC={codec}", 'yellow', attrs=['bold']))
+        print(cmd)
+        print()
 
 ## Assign command arguments
 def parse_options():
@@ -252,7 +281,9 @@ def main():
 
     # Encode videos to HEVC
     if args.enc_vids:
-        print("To be continued...")
+        files = get_videos(args.enc_vids, args.rcr_vids)
+        files_mi_full = get_videos_mi_full(files, 'OTHER')
+        encode_videos(files_mi_full)
 
 
 if __name__ == '__main__':
