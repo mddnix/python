@@ -65,10 +65,12 @@ def get_videos_mi_full(videos_list, flag):
     if flag == 'ALL':
         return videos_list_mi_full
     elif flag == 'HEVC':
-        videos_list_mi_full = [rec for rec in videos_list_mi_full if rec.get('format') == 'HEVC']
+        videos_list_mi_full = [rec for rec in videos_list_mi_full \
+                if rec.get('format') == 'HEVC']
         return videos_list_mi_full
     if flag == 'OTHER':
-        videos_list_mi_full = [rec for rec in videos_list_mi_full if rec.get('format') != 'HEVC']
+        videos_list_mi_full = [rec for rec in videos_list_mi_full \
+                if rec.get('format') != 'HEVC']
         return videos_list_mi_full
 
 ## Print summary information
@@ -100,7 +102,7 @@ def print_summary(video_list, path):
         dur_s += vid['duration']
         size_b += vid['fsize_byte']
 
-    dur_in_time = str(datetime.timedelta(milliseconds = dur_s)) # Milliseconds to time
+    dur_in_time = str(datetime.timedelta(milliseconds = dur_s)) # ms to time
     dur_in_time = dur_in_time.split('.', 1)[0] # Trim nanoseconds
     size_in_human = hf.format_size(size_b, binary=True) # Size
     path = '"' + path + '"' # Insert double quotes around path variable
@@ -108,7 +110,9 @@ def print_summary(video_list, path):
 
     # Print summary
     if not count == 0:
-        print(f"Total of {colored(count, 'yellow', attrs=['bold'])} videos, {colored(dur_in_time, 'yellow', attrs=['bold'])} hours of runtime, and {colored(size_in_human, 'yellow', attrs=['bold'])} in size.")
+        print(f"Total of {colored(count, 'yellow', attrs=['bold'])} videos, \
+{colored(dur_in_time, 'yellow', attrs=['bold'])} hours of runtime, \
+and {colored(size_in_human, 'yellow', attrs=['bold'])} in size.")
         os.system(cmd)
     else:
         print("No videos found.")
@@ -122,7 +126,8 @@ def print_videos(video_list):
     size_b = 0
 
     # Print header
-    print(colored('SL# CODE DIMENSION   DURATION       SIZE   FILENAME', 'yellow', attrs=['bold']))
+    print(colored('SL# CODE DIMENSION   DURATION       SIZE   FILENAME', \
+'yellow', attrs=['bold']))
 
     # Loop through list and print content
     for vid in video_list:
@@ -134,14 +139,17 @@ def print_videos(video_list):
         size_h = vid['fsize_human']
         filename = vid['fname'].replace(PWD, '.', 1)
 
-        print(f"{slno:0>3d} {codec:4s} {aspect:9s} {dur_h:12s} {size_h:>10s} {filename}")
+        print(f"{slno:0>3d} {codec:4s} {aspect:9s} {dur_h:12s} {size_h:>10s} \
+{filename}")
         slno += 1
 
     # Print Tail
     dur_in_time = str(datetime.timedelta(milliseconds = dur_s))[:-3]
     size_in_human = hf.format_size(size_b, binary=True)
-    print(colored("                   ------------ ----------", 'cyan', attrs=['bold']))
-    print(colored(f'{" ":18s} {dur_in_time:>12s} {size_in_human:>10s}', 'yellow', attrs=['bold']))
+    print(colored("                   ------------ ----------", 'cyan', \
+attrs=['bold']))
+    print(colored(f'{" ":18s} {dur_in_time:>12s} {size_in_human:>10s}', \
+'yellow', attrs=['bold']))
 
 ## Assign command arguments
 def parse_options():
