@@ -20,6 +20,7 @@ def get_videos(path, recur):
 
     # Get video files within a directory
     for root, dirs, files in os.walk(path):
+        dirs.sort()
         for filename in sorted(files):
             for ext in EXTN:
                 if filename.lower().endswith(ext.lower()):
@@ -47,7 +48,6 @@ def get_videos_mi_full(videos_list, flag):
                         "format": track.format,
                         "width": track.width,
                         "height": track.height,
-                        #"duration": (float(track.duration) / 1000),
                         "duration": float(track.duration),
                         "duration_h": track.other_duration[3],
                         "framerate": float(track.frame_rate)
@@ -71,15 +71,57 @@ def get_videos_mi_full(videos_list, flag):
         videos_list_mi_full = [rec for rec in videos_list_mi_full if rec.get('format') != 'HEVC']
         return videos_list_mi_full
 
+## Print summary information
+def print_summary(video_list, path):
+    count = len(video_list) # Total number of files
+    videos_list_summ = [] # List of dictionary with MediaInfo
+    tmp_dict1 = {} # Temporary dict to hold MI Video info
+    tmp_dict2 = {} # Temporary dict to hold MI General info
+    dur_s = 0.0 # Total duration, set to float
+    size_b = 0  # Total size, set to int
+    
+    # For every video in list 'videos_list_sum' get mediainfo
+    for video in video_list:
+        mediainfo = mi.parse(video)
+        for track in mediainfo.tracks:
+            if track.track_type == 'Video':
+                tmp_dict1 = {
+                        "duration": float(track.duration),
+                        }
+            elif track.track_type == 'General':
+                tmp_dict2 = {
+                        "fsize_byte": int(track.file_size),
+                        }
+        tmp_dict1.update(tmp_dict2) # Join tmp_dict1 + tmp_dict2
+        videos_list_summ.append(tmp_dict1) # Append dictionary into the list
+
+    # Loop through list and calculate totals
+    for vid in videos_list_summ:
+        dur_s += vid['duration']
+        size_b += vid['fsize_byte']
+
+    dur_in_time = str(datetime.timedelta(milliseconds = dur_s)) # Milliseconds to time
+    dur_in_time = dur_in_time.split('.', 1)[0] # Trim nanoseconds
+    size_in_human = hf.format_size(size_b, binary=True) # Size
+
+    # Print summary
+    print(f"Total of {colored(count, 'yellow', attrs=['bold'])} videos, {colored(dur_in_time, 'yellow', attrs=['bold'])} hours of runtime, and {colored(size_in_human, 'yellow', attrs=['bold'])} in size.")
+
+    # Print output of find command
+    path = '"' + path + '"' # Insert double quotes around path variable
+    cmd = 'find ' + path + ' -type f | grep -o ".[^.]\+$" | sort | uniq -c'
+    abc = os.system(cmd)
+
+
 ## Print al videos in list mode
 def print_videos(video_list):
-    count = len(video_list)
     slno = 1
     dur_s = 0.0
     size_b = 0
 
     # Print header
     print(colored('SL# CODE DIMENSION   DURATION       SIZE   FILENAME', 'yellow', attrs=['bold']))
+
     # Loop through list and print content
     for vid in video_list:
         codec = vid['format'][:4]
@@ -93,16 +135,30 @@ def print_videos(video_list):
         print(f"{slno:0>3d} {codec:4s} {aspect:9s} {dur_h:12s} {size_h:>10s} {filename}")
         slno += 1
 
+    # Print Tail
     dur_in_time = str(datetime.timedelta(milliseconds = dur_s))[:-3]
     size_in_human = hf.format_size(size_b, binary=True)
     print(colored("                   ------------ ----------", 'cyan', attrs=['bold']))
     print(colored(f'{" ":18s} {dur_in_time:>12s} {size_in_human:>10s}', 'yellow', attrs=['bold']))
 
+## Assign command arguments
 def parse_options():
     help_msg = 'Encode videos to HEVC 10Bit'
     parser = argparse.ArgumentParser(description=help_msg)
     group = parser.add_mutually_exclusive_group(required=True)
 
+    # Show summary of all videos
+    group.add_argument(
+            '-s', 
+            dest='sum_vids', 
+            nargs='?', 
+            action='store', 
+            const=PWD, 
+            metavar='PATH', 
+            help='Summary of videos information'
+            )
+
+    # Show all videos
     group.add_argument(
             '-a', 
             dest='all_vids', 
@@ -112,6 +168,8 @@ def parse_options():
             metavar='PATH', 
             help='List all videos'
             )
+
+    # Show only HEVC videos
     group.add_argument(
             '-H', 
             dest='hvc_vids', 
@@ -121,6 +179,8 @@ def parse_options():
             metavar='PATH', 
             help='List HEVC videos only'
             )
+
+    # Show other videos which are not HEVC
     group.add_argument(
             '-o', 
             dest='oth_vids', 
@@ -130,6 +190,8 @@ def parse_options():
             metavar='PATH', 
             help='List other videos. Exclude all HEVC videos'
             )
+
+    # Encode videos to HEVC
     group.add_argument(
             '-e', 
             dest='enc_vids', 
@@ -139,6 +201,8 @@ def parse_options():
             metavar='PATH', 
             help='Encode videos to HEVC 10bit'
             )
+
+    # Set recursive on or off
     parser.add_argument(
             '-r', 
             dest='rcr_vids', 
@@ -149,20 +213,34 @@ def parse_options():
     return parser.parse_args()
 
 def main():
-    args = parse_options()
-    video_files = []
+    args = parse_options() # Passed arguments
+    video_files = [] # Empty list to hold videos
+
+    # Summary of Videos
+    if args.sum_vids:
+        #files = get_videos(args.sum_vids, args.rcr_vids)
+        files = get_videos(args.sum_vids, True)
+        print_summary(files, args.sum_vids)
+
+    # All Videos display
     if args.all_vids:
         files = get_videos(args.all_vids, args.rcr_vids)
         files_mi_full = get_videos_mi_full(files, 'ALL')
         print_videos(files_mi_full)
+
+    # HEVC Videos display
     if args.hvc_vids:
         files = get_videos(args.hvc_vids, args.rcr_vids)
         files_mi_full = get_videos_mi_full(files, 'HEVC')
         print_videos(files_mi_full)
+
+    # Other videos display
     if args.oth_vids:
         files = get_videos(args.oth_vids, args.rcr_vids)
         files_mi_full = get_videos_mi_full(files, 'OTHER')
         print_videos(files_mi_full)
+
+    # Encode videos to HEVC
     if args.enc_vids:
         print("To be continued...")
 
