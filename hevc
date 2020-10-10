@@ -103,14 +103,16 @@ def print_summary(video_list, path):
     dur_in_time = str(datetime.timedelta(milliseconds = dur_s)) # Milliseconds to time
     dur_in_time = dur_in_time.split('.', 1)[0] # Trim nanoseconds
     size_in_human = hf.format_size(size_b, binary=True) # Size
-
-    # Print summary
-    print(f"Total of {colored(count, 'yellow', attrs=['bold'])} videos, {colored(dur_in_time, 'yellow', attrs=['bold'])} hours of runtime, and {colored(size_in_human, 'yellow', attrs=['bold'])} in size.")
-
-    # Print output of find command
     path = '"' + path + '"' # Insert double quotes around path variable
     cmd = 'find ' + path + ' -type f | grep -o ".[^.]\+$" | sort | uniq -c'
-    abc = os.system(cmd)
+
+    # Print summary
+    if not count == 0:
+        print(f"Total of {colored(count, 'yellow', attrs=['bold'])} videos, {colored(dur_in_time, 'yellow', attrs=['bold'])} hours of runtime, and {colored(size_in_human, 'yellow', attrs=['bold'])} in size.")
+        os.system(cmd)
+    else:
+        print("No videos found.")
+
 
 
 ## Print al videos in list mode
