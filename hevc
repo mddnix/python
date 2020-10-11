@@ -123,35 +123,39 @@ and {colored(size_in_human, 'yellow', attrs=['bold'])} in size.")
 
 ## Print al videos in list mode
 def print_videos(video_list):
+    count = len(video_list) # Total number of files
     slno = 1
     dur_s = 0.0
     size_b = 0
 
-    # Print header
-    print(colored('SL# CODE DIMENSION   DURATION       SIZE   FILENAME', \
-'yellow', attrs=['bold']))
-
-    # Loop through list and print content
-    for vid in video_list:
-        codec = vid['format'][:4]
-        aspect = str(vid['width'])+'x'+str(vid['height'])
-        dur_s += vid['duration']
-        dur_h = vid['duration_h']
-        size_b += vid['fsize_byte']
-        size_h = vid['fsize_human']
-        filename = vid['fname'].replace(PWD, '.', 1)
-
-        print(f"{slno:0>3d} {codec:4s} {aspect:9s} {dur_h:12s} {size_h:>10s} \
+    if not count == 0:
+        # Print header
+        print(colored('SL# CODE DIMENSION   DURATION       SIZE   FILENAME', \
+    'yellow', attrs=['bold']))
+    
+        # Loop through list and print content
+        for vid in video_list:
+            codec = vid['format'][:4]
+            aspect = str(vid['width'])+'x'+str(vid['height'])
+            dur_s += vid['duration']
+            dur_h = vid['duration_h']
+            size_b += vid['fsize_byte']
+            size_h = vid['fsize_human']
+            filename = vid['fname'].replace(PWD, '.', 1)
+    
+            print(f"{slno:0>3d} {codec:4s} {aspect:9s} {dur_h:12s} {size_h:>10s} \
 {filename}")
-        slno += 1
-
-    # Print Tail
-    dur_in_time = str(datetime.timedelta(milliseconds = dur_s))[:-3]
-    size_in_human = hf.format_size(size_b, binary=True)
-    print(colored("                   ------------ ----------", 'cyan', \
-attrs=['bold']))
-    print(colored(f'{" ":18s} {dur_in_time:>12s} {size_in_human:>10s}', \
-'yellow', attrs=['bold']))
+            slno += 1
+    
+        # Print Tail
+        dur_in_time = str(datetime.timedelta(milliseconds = dur_s))[:-3]
+        size_in_human = hf.format_size(size_b, binary=True)
+        print(colored("                   ------------ ----------", 'cyan', \
+    attrs=['bold']))
+        print(colored(f'{" ":18s} {dur_in_time:>12s} {size_in_human:>10s}', \
+    'yellow', attrs=['bold']))
+    else:
+        print("No videos found.")
 
 
 ## Encode videos to HEVC
