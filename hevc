@@ -8,6 +8,7 @@ from termcolor import colored
 import datetime
 import humanfriendly as hf
 import random
+import subprocess
 
 # Valid extensions
 EXTN = ['.avi', '.flv', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.webm', '.wmv']
@@ -164,24 +165,38 @@ def encode_videos(video_list):
     count = len(video_list) # Total no of videos
     cntr = 0 # Counter for each file
 
+    print()
     for vid in video_list:
-        filename = vid['fname']
-        frames = vid['frame_count']
-        size_k = int(vid['fsize_byte']/1024)
-        size_h = vid['fsize_human']
-        dura_h = vid['duration_h']
-        aspect = str(vid['width'])+'x'+str(vid['height'])
-        codec = vid['format']
-        cntr += 1
-        color_cntr = colored("Encoding  :", 'yellow', attrs=['bold']) + " " + colored(f'{cntr}/{count}', 'cyan', attrs=['bold'])
-        color_file = colored("Processing:", 'yellow', attrs=['bold']) + " " + colored(filename, 'cyan', attrs=['bold'])
-        rnd_name = "/tmp/hevc" + str(random.randrange(1, 10**10)) + ".mp4"
-        cmd = "ffmpeg -v error -hide_banner -stats -i " + filename + " -c:v libx265 -crf:v 28 -preset superfast -pix_fmt yuv444p10le -x265-params log-level=error -c:a aac -threads 0 -f mp4 " + rnd_name
+        filename = vid['fname'] # Original file with path
+        head, tail = os.path.split(filename) # Split path and filename
+        base, extn = os.path.splitext(tail)  # split basename and extension
+        filename_target = head + "/" + base + ".mp4" # Create taeget filename
+        frames = vid['frame_count'] # Total frames in video
+        size_k = int(vid['fsize_byte']/1024) # Size of video in KiB
+        size_h = vid['fsize_human'] # Size of video in human
+        dura_h = vid['duration_h']  # Duration of video in human
+        aspect = str(vid['width'])+'x'+str(vid['height']) # Dimension of video
+        codec = vid['format'] # Codec of video
+        cntr += 1 # Counter of video processing
+        color_cntr = colored("Encoding  :", 'yellow', attrs=['bold']) + " " + colored(f'{cntr}/{count}', 'cyan', attrs=['bold']) # Counter in color
+        color_file = colored("Processing:", 'yellow', attrs=['bold']) + " " + colored(filename, 'cyan', attrs=['bold']) # Filename in color
+        rnd_name = "/tmp/hevc" + str(random.randrange(1, 10**10)) + ".mp4" # Random filename
+        cmd_ff = "ffmpeg -v error -hide_banner -stats -i '" + filename + "' -c:v libx265 -crf:v 28 -preset superfast -pix_fmt yuv444p10le -x265-params log-level=error -c:a aac -threads 0 -f mp4 " + rnd_name
 
         print(color_cntr)
         print(color_file)
-        print(colored(f"FRAMES={frames}, SIZE={size_h}, SIZE={size_k} KiB, TIME={dura_h}, ASPECT={aspect}, CODEC={codec}", 'yellow', attrs=['bold']))
-        print(cmd)
+        print(colored(f"FRAMES= {frames},   SIZE={size_h}, SIZE={size_k} KiB, TIME={dura_h}, ASPECT={aspect}, CODEC={codec}", 'yellow', attrs=['bold']))
+        encode_start = subprocess.run(cmd_ff, shell=True)
+        if encode_start.returncode == 0:
+            cmd_rm = subprocess.run(f"rm -f '{filename}'", shell=True)
+            if cmd_rm.returncode == 0:
+                cmd_cp = subprocess.run(f"cp -f '{rnd_name}' '{filename_target}'", shell=True)
+                if cmd_cp.returncode != 0:
+                    print("Error! couldn't copy")
+            else:
+                print("Error! couldn't remove original video")
+        else:
+            print("Encode error")
         print()
 
 ## Assign command arguments
