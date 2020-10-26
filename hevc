@@ -9,6 +9,7 @@ import datetime
 import humanfriendly as hf
 import random
 import subprocess
+import sys
 
 # Valid extensions
 EXTN = ['.avi', '.flv', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.webm', '.wmv']
@@ -164,8 +165,14 @@ def encode_videos(video_list):
     
     count = len(video_list) # Total no of videos
     cntr = 0 # Counter for each file
+    if count != 0:
+        crf = int(input('Enter CRF value (default is 28): ') or '28')
+        print('Valid presets are ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow and placebo')
+        preset = str(input('Choose preset (default is superfast): ') or 'superfast')
+        print()
+    else:
+        print('No non-hevc videos to encode.')
 
-    print()
     for vid in video_list:
         filename = vid['fname'] # Original file with path
         head, tail = os.path.split(filename) # Split path and filename
@@ -181,22 +188,23 @@ def encode_videos(video_list):
         color_cntr = colored("Encoding  :", 'yellow', attrs=['bold']) + " " + colored(f'{cntr}/{count}', 'cyan', attrs=['bold']) # Counter in color
         color_file = colored("Processing:", 'yellow', attrs=['bold']) + " " + colored(filename, 'cyan', attrs=['bold']) # Filename in color
         rnd_name = "/tmp/hevc" + str(random.randrange(1, 10**10)) + ".mp4" # Random filename
-        cmd_ff = "ffmpeg -v error -hide_banner -stats -i '" + filename + "' -c:v libx265 -crf:v 28 -preset superfast -pix_fmt yuv444p10le -x265-params log-level=error -c:a aac -threads 0 -f mp4 " + rnd_name
+        cmd_ff = "ffmpeg -v error -hide_banner -stats -i '" + filename + "' -c:v libx265 -crf:v " + str(crf) + " -preset " + preset + " -pix_fmt yuv444p10le -x265-params log-level=error -c:a aac -threads 0 -f mp4 " + rnd_name
 
         print(color_cntr)
         print(color_file)
+        print(colored(cmd_ff, 'magenta'))
         print(colored(f"FRAMES= {frames},   SIZE={size_h}, SIZE={size_k} KiB, TIME={dura_h}, ASPECT={aspect}, CODEC={codec}", 'yellow', attrs=['bold']))
         encode_start = subprocess.run(cmd_ff, shell=True)
         if encode_start.returncode == 0:
             cmd_rm = subprocess.run(f"rm -f '{filename}'", shell=True)
             if cmd_rm.returncode == 0:
-                cmd_cp = subprocess.run(f"cp -f '{rnd_name}' '{filename_target}'", shell=True)
+                cmd_cp = subprocess.run(f"mv -f '{rnd_name}' '{filename_target}'", shell=True)
                 if cmd_cp.returncode != 0:
-                    print("Error! couldn't copy")
+                    sys.exit("Error! couldn't copy")
             else:
-                print("Error! couldn't remove original video")
+                sys.exit("Error! couldn't remove original video")
         else:
-            print("Encode error")
+            sys.exit("Encode error")
         print()
 
 ## Assign command arguments
