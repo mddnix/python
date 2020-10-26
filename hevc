@@ -159,6 +159,20 @@ def print_videos(video_list):
     else:
         print("No videos found.")
 
+# Test different encoding settings for HEVC
+def test_crfs(filename):
+    print(filename)
+    extn = os.path.splitext(filename)[1] 
+    print(extn)
+    rnd_no = str(random.randrange(100,999)) # Generate random no from 100-999
+
+    trim_ss = str(input("Start cut at time: ") or '00:00:00') # Specify trim start time 
+    
+    cmd_ff = "ffmpeg -v info -hide_banner -stats -ss " + trim_ss +  " -i '" + filename + "' -t 20 -c copy -avoid_negative_ts 1 -sn -map_chapters -1 " + rnd_no +"-00-ORIGINAL" + extn
+    print(cmd_ff)
+    for crf in [23, 25, 28]:
+        for pre in ['superfast', 'faster', 'medium']:
+            print(f"{rnd_no}-{crf}-{pre}")
 
 ## Encode videos to HEVC
 def encode_videos(video_list):
@@ -268,6 +282,15 @@ def parse_options():
             help='Encode videos to HEVC 10bit'
             )
 
+    # Test different encoding settings
+    group.add_argument(
+            '-t', 
+            dest='tst_vids', 
+            action='store', 
+            metavar='FILE', 
+            help='Test different encoding settings for HEVC'
+            )
+
     # Set recursive on or off
     parser.add_argument(
             '-r', 
@@ -312,6 +335,9 @@ def main():
         files_mi_full = get_videos_mi_full(files, 'OTHER')
         encode_videos(files_mi_full)
 
+    # Test different encoding settings
+    if args.tst_vids:
+        test_crfs(args.tst_vids)
 
 if __name__ == '__main__':
     main()
