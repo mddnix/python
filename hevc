@@ -161,23 +161,24 @@ def print_videos(video_list):
 
 # Test different encoding settings for HEVC
 def test_crfs(filename):
-    print(filename)
+    #print(filename)
     extn = os.path.splitext(filename)[1] # Extract extension of input file
     rnd_no = subprocess.Popen("date +%d%H%M%S", shell=True, stdout=subprocess.PIPE, universal_newlines=True).communicate()[0].strip()
-    trim_ss = str(input("Start cut at time: ") or '0') # Specify trim start time 
+    trim_ss = str(input("Start trim at time? ") or '0') # Specify trim start time 
+    no_of_sec = str(input("How many secondsto trim? ") or '10') # No of seconds to trim
     print()
 
     #txt_summ = open(f"{rnd_no}-99-summary.txt", "a")
 
     # Trim original video file
-    cmd_ff = "ffmpeg -v fatal -hide_banner -stats -ss " + trim_ss +  " -i '" + filename + "' -t 10 -c copy -avoid_negative_ts 1 -sn -map_chapters -1 " + rnd_no +"-00-ORIGINAL" + extn
+    cmd_ff = "ffmpeg -v fatal -hide_banner -stats -ss " + trim_ss +  " -i \"" + filename + "\" -t " + no_of_sec + " -c copy -avoid_negative_ts 1 -sn -map_chapters -1 " + rnd_no +"-00-ORIGINAL" + extn
     #encode_cmd_ff = subprocess.run(cmd_ff, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     encode_cmd_ff = subprocess.run(cmd_ff, shell=True, stderr=subprocess.PIPE)
     if encode_cmd_ff.returncode == 0:
         for crf in [23, 25, 28]:
             for pre in ['superfast', 'faster', 'medium']:
                 print(f"Now encoding: {rnd_no}-{crf}-{pre}.mp4")
-                cmd_ff_hevc = "ffmpeg -v fatal -hide_banner -stats -ss " + trim_ss +  " -i '" + filename + "' -t 10 -c:v libx265 -crf:v " + str(crf) + " -preset " + pre + " -pix_fmt yuv444p10le -x265-params log-level=error -c:a aac -threads 0 -f mp4 " + rnd_no + "-" + str(crf) + "-" + pre + extn
+                cmd_ff_hevc = "ffmpeg -v fatal -hide_banner -stats -ss " + trim_ss +  " -i \"" + filename + "\" -t " + no_of_sec + " -c:v libx265 -crf:v " + str(crf) + " -preset " + pre + " -pix_fmt yuv444p10le -x265-params log-level=error -c:a aac -threads 0 -f mp4 " + rnd_no + "-" + str(crf) + "-" + pre + extn
                 encode_cmd_ff_hevc = subprocess.run(cmd_ff_hevc, shell=True)
                 print()
     #txt_summ.close()
