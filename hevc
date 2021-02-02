@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """ Encode video files to HEVC 10Bit video. """
 
+# $ pip3 install --user pymediainfo termcolor humanfriendly
 import os
 import argparse
 from pymediainfo import MediaInfo as mi
